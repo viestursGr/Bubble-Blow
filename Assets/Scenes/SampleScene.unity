@@ -166,10 +166,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bubblePrefab: {fileID: 4462090435153195696, guid: a214ee58820c9cb44971457a554db132,
     type: 3}
-  gridWidth: 8
-  gridHeight: 5
+  gridWidth: 7
+  gridHeight: 2
   bubbleSpacing: 0.8
-  moveDownInterval: 5
+  moveDownInterval: 1
   moveDownAmount: 0.5
   matchThreshold: 3
   bubbleSprites:
@@ -178,6 +178,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 00c810c276b4ee049b700deac6908087, type: 3}
   - {fileID: 21300000, guid: 6b5a99176bb8c5c4a9ab1d0f346eaaa8, type: 3}
   - {fileID: 21300000, guid: 6cf8e6cddd9c74b44a1e724207aed48f, type: 3}
+  bubbleTopOffset: 4
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -223,7 +224,7 @@ Camera:
   m_FocalLength: 50
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.3
+    x: 0
     y: 0
     width: 0.3
     height: 1

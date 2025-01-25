@@ -13,6 +13,7 @@ public class BubbleManager : MonoBehaviour
     public GameObject[,] bubbleGrid; // 2D array to hold the grid of bubbles
     public int matchThreshold = 3; // Minimum number of connected bubbles to pop
     public Sprite[] bubbleSprites; // Array of sprites for bubble colors
+    public int bubbleTopOffset = 5;
 
     void Start()
     {
@@ -22,7 +23,7 @@ public class BubbleManager : MonoBehaviour
         // Generate initial rows of bubbles
         GenerateInitialBubbles();
 
-        StartCoroutine(MoveBubblesDown());
+        // StartCoroutine(MoveBubblesDown());
     }
 
     void GenerateInitialBubbles()
@@ -33,7 +34,7 @@ public class BubbleManager : MonoBehaviour
             {
                 Vector3 position = new Vector3(
                     j * bubbleSpacing - gridWidth / 2f * bubbleSpacing + bubbleSpacing / 2f,
-                    i * bubbleSpacing,
+                    i * bubbleSpacing + bubbleTopOffset,
                     0
                 );
 
@@ -43,8 +44,14 @@ public class BubbleManager : MonoBehaviour
                 Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
                 if (rb != null) Destroy(rb); // Remove Rigidbody2D
 
-                AssignRandomColor(bubble);     
+                AssignRandomColor(bubble);  
+
+                Bubble bb = bubble.GetComponent<Bubble>();
+                bb.BubblePositionX = j;
+                bb.BubblePositionY = i;
+
                 bubbleGrid[j, i] = bubble;
+                Debug.Log("Generated bubble: " + j + " " + i);
             }
         }
     }
@@ -112,71 +119,78 @@ public class BubbleManager : MonoBehaviour
 
     public void AddNewRow()
     {
-        // Shift bubbles up to make space for a new row
-        for (int j = gridHeight - 1; j > 0; j--)
-        {
-            for (int i = 0; i < gridWidth; i++)
-            {
-                bubbleGrid[i, j] = bubbleGrid[i, j - 1];
-            }
-        }
+        // // Shift bubbles up to make space for a new row
+        // for (int j = gridHeight - 1; j > 0; j--)
+        // {
+        //     for (int i = 0; i < gridWidth; i++)
+        //     {
+        //         bubbleGrid[i, j] = bubbleGrid[i, j - 1];
+        //     }
+        // }
 
-        // Generate a new row of bubbles
-        for (int i = 0; i < gridWidth; i++)
-        {
-            Vector3 position = new Vector3(
-                i * bubbleSpacing - gridWidth / 2f * bubbleSpacing + bubbleSpacing / 2f,
-                (gridHeight - 1) * bubbleSpacing,
-                0
-            );
+        // // Generate a new row of bubbles
+        // for (int i = 0; i < gridWidth; i++)
+        // {
+        //     Vector3 position = new Vector3(
+        //         i * bubbleSpacing - gridWidth / 2f * bubbleSpacing + bubbleSpacing / 2f,
+        //         (gridHeight - 1) * bubbleSpacing,
+        //         0
+        //     );
 
-            GameObject bubble = Instantiate(bubblePrefab, position, Quaternion.identity, transform);
-            // Disable physics for grid bubbles
-            Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
-            if (rb != null) Destroy(rb); // Remove Rigidbody2D
+        //     GameObject bubble = Instantiate(bubblePrefab, position, Quaternion.identity, transform);
+        //     // Disable physics for grid bubbles
+        //     Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
+        //     if (rb != null) Destroy(rb); // Remove Rigidbody2D
             
-            AssignRandomColor(bubble);            
-            bubbleGrid[i, 0] = bubble;
-        }
+        //     AssignRandomColor(bubble);            
+        //     bubbleGrid[i, 0] = bubble;
+        // }
     }
 
-    void CheckForMatches(int startX, int startY)
+    public void CheckForMatches(int startX, int startY)
     {
+        Debug.Log("Matching");
+
         List<GameObject> matchingBubbles = new List<GameObject>();
-        Color targetColor = bubbleGrid[startX, startY].GetComponent<SpriteRenderer>().color;
+        Bubble bubble = bubbleGrid[startX, startY].GetComponent<Bubble>();
+        string targetColor = bubble.BubbleColor;
 
         // Flood-fill or DFS to find all connected bubbles of the same color
-        FindMatchingBubbles(startX, startY, targetColor, matchingBubbles);
+        FindMatchingBubbles(startX, startY, targetColor, ref matchingBubbles);
+
+        Debug.Log("Matching count: " + matchingBubbles.Count);
 
         // Remove bubbles if 3 or more are matched
         if (matchingBubbles.Count >= 3)
         {
-            foreach (GameObject bubble in matchingBubbles)
+            foreach (GameObject b in matchingBubbles)
             {
-                int x = Mathf.RoundToInt((bubble.transform.position.x + gridWidth / 2f * bubbleSpacing) / bubbleSpacing);
-                int y = Mathf.RoundToInt(bubble.transform.position.y / bubbleSpacing);
+                int x = Mathf.RoundToInt((b.transform.position.x + gridWidth / 2f * bubbleSpacing) / bubbleSpacing);
+                int y = Mathf.RoundToInt(b.transform.position.y / bubbleSpacing);
                 bubbleGrid[x, y] = null; // Remove from grid
-                Destroy(bubble); // Destroy the bubble
+                Destroy(b); // Destroy the bubble
             }
         }
     }
 
     // Recursive method to find all connected bubbles of the same color
-    void FindMatchingBubbles(int x, int y, Color targetColor, List<GameObject> matchingBubbles)
+    void FindMatchingBubbles(int x, int y, string targetColor, ref List<GameObject> matchingBubbles)
     {
         if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight || bubbleGrid[x, y] == null)
             return;
 
-        SpriteRenderer sr = bubbleGrid[x, y].GetComponent<SpriteRenderer>();
-        if (sr != null && sr.color == targetColor && !matchingBubbles.Contains(bubbleGrid[x, y]))
+        // Get the Bubble script/component from the current GameObject
+        Bubble bubble = bubbleGrid[x, y].GetComponent<Bubble>();
+
+        if (bubble != null && bubble.BubbleColor == targetColor && !matchingBubbles.Contains(bubbleGrid[x, y]))
         {
             matchingBubbles.Add(bubbleGrid[x, y]);
 
-            // Check adjacent cells
-            FindMatchingBubbles(x + 1, y, targetColor, matchingBubbles);
-            FindMatchingBubbles(x - 1, y, targetColor, matchingBubbles);
-            FindMatchingBubbles(x, y + 1, targetColor, matchingBubbles);
-            FindMatchingBubbles(x, y - 1, targetColor, matchingBubbles);
+            // Check adjacent cells recursively
+            FindMatchingBubbles(x + 1, y, targetColor, ref matchingBubbles);
+            FindMatchingBubbles(x - 1, y, targetColor, ref matchingBubbles);
+            FindMatchingBubbles(x, y + 1, targetColor, ref matchingBubbles);
+            FindMatchingBubbles(x, y - 1, targetColor, ref matchingBubbles);
         }
     }
 
@@ -186,21 +200,76 @@ public class BubbleManager : MonoBehaviour
         return pos.x >= 0 && pos.x < gridWidth && pos.y >= 0 && pos.y < gridHeight;
     }
 
+    public void AddBubbleToGrid(GameObject bubble, int targetX, int targetY) 
+    {
+        var targetBubble = bubbleGrid[targetX, targetY];
+        if (targetBubble.transform.position.y > bubble.transform.position.y ) {
+            // bubble goes on top of target
+            int bubbleY = targetY + 1;
+            ExpandGridHeight(targetY + 1); // Expand the grid height to accommodate the bubble
+            bubbleGrid[targetX, targetY + 1] = bubble; // Add the bubble to the grid
+            CheckForMatches(targetX, targetY + 1); // Check for matches starting from this bubble
+        }
+    }
+
     public void AddBubbleToGrid(GameObject bubble, Vector3 position)
     {
+        // Calculate the grid coordinates (x, y) for the bubble
         int x = Mathf.RoundToInt((position.x + gridWidth / 2f * bubbleSpacing) / bubbleSpacing);
-        int y = Mathf.RoundToInt(position.y / bubbleSpacing);
+        // Transform position.y to a positive grid coordinate by applying an offset
+        float yOffset = (gridHeight * bubbleSpacing) / 2f; // Adjust this offset based on your grid origin
+        int y = Mathf.RoundToInt((position.y + yOffset) / bubbleSpacing);
 
-        if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight)
+        Debug.Log("Check for matches " + x + " " + y);
+
+        // Ensure the bubble's grid position is within bounds, expanding the grid if necessary
+        if (x >= 0 && x < gridWidth)
         {
-            bubbleGrid[x, y] = bubble; // Add the bubble to the grid
-        }
+            if (y >= gridHeight) // Bubble is above the current grid height
+            {
+                ExpandGridHeight(y + 1); // Expand the grid height to accommodate the bubble
+            }
 
-        CheckForMatches(x, y); // Check for matches starting from this bubble
+            if (y >= 0) // Valid grid position
+            {
+                bubbleGrid[x, y] = bubble; // Add the bubble to the grid
+                bubble.transform.position = new Vector3(
+                    x * bubbleSpacing - gridWidth / 2f * bubbleSpacing,
+                    y * bubbleSpacing,
+                    0
+                );
+            }
+
+            //Debug.Log("Check for matches " + x + " " + y);
+            CheckForMatches(x, y); // Check for matches starting from this bubble
+        }
+    }
+
+    private void ExpandGridHeight(int newHeight)
+    {
+        // If the new height is greater than the current grid height
+        if (newHeight > gridHeight)
+        {
+            GameObject[,] newBubbleGrid = new GameObject[gridWidth, newHeight];
+
+            // Copy the existing grid into the new, larger grid
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = 0; y < gridHeight; y++)
+                {
+                    newBubbleGrid[x, y] = bubbleGrid[x, y];
+                }
+            }
+
+            bubbleGrid = newBubbleGrid; // Replace the old grid with the new one
+            gridHeight = newHeight;    // Update the grid height
+        }
     }
 
     void AssignRandomColor(GameObject bubble)
     {
+        var bb = bubble.GetComponent<Bubble>();
+
         if (bubbleSprites != null && bubbleSprites.Length > 0)
         {
             // Choose a random sprite (if using sprites)
@@ -210,6 +279,28 @@ public class BubbleManager : MonoBehaviour
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = bubbleSprites[randomIndex];
+
+                string spriteName = spriteRenderer.sprite.name;
+                
+                switch (spriteName)
+                {
+                    case "gold_bubble":
+                        bb.BubbleColor = "GOLD";
+                        break;
+                    case "blue_bubble":
+                        bb.BubbleColor = "BLUE";
+                        break;
+                    case "pink_bubble":
+                        bb.BubbleColor = "PINK";
+                        break;
+                    case "green_bubble":
+                        bb.BubbleColor = "GREEN";
+                        break;
+                    case "purple_bubble":
+                    default:
+                        bb.BubbleColor = "PURPLE";
+                        break;
+                }
             }
         }
     }

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ShotBubble : MonoBehaviour
+public class ShotBubble : Bubble
 {
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("Shot bubble started");
         rb = GetComponent<Rigidbody2D>();
         bubbleManager = FindObjectOfType<BubbleManager>();
     }
@@ -17,15 +18,13 @@ public class ShotBubble : MonoBehaviour
         
     }
 
-    public string color; // Assign a color string like "Red", "Blue", etc.
     public BubbleManager bubbleManager;
     private Rigidbody2D rb;
+    private bool AddedToGrid = false;
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log("Collision happened!");
-
-        if (collision.gameObject.CompareTag("BubbleStatic"))
+        if (AddedToGrid == false && collision.gameObject.CompareTag("bubble"))
         {
             // Stop the shot bubble's movement
             rb.velocity = Vector2.zero;
@@ -35,10 +34,16 @@ public class ShotBubble : MonoBehaviour
             Vector3 snappedPosition = bubbleManager.SnapToGrid(transform.position);
             transform.position = snappedPosition;
 
-            bubbleManager.AddBubbleToGrid(gameObject, snappedPosition);
+            var springJoint =  this.gameObject.AddComponent<SpringJoint2D>();
+            springJoint.anchor = snappedPosition;
+
+            var collidedBubble = collision.gameObject.GetComponent<Bubble>();
+            Debug.Log("Collided bubble: " + collidedBubble.BubblePositionX + " " + collidedBubble.BubblePositionY);
+
+            // bubbleManager.AddBubbleToGrid(gameObject, snappedPosition);
 
             // Disable this script after the bubble is part of the grid
-            enabled = false;
+            AddedToGrid = true;
         }
     }
 }

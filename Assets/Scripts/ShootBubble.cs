@@ -26,6 +26,8 @@ public class ShootBubble : MonoBehaviour
 
     void AssignRandomColor(GameObject bubble)
     {
+        var bb = bubble.GetComponent<Bubble>();
+
         if (bubbleSprites != null && bubbleSprites.Length > 0)
         {
             // Choose a random sprite (if using sprites)
@@ -35,6 +37,30 @@ public class ShootBubble : MonoBehaviour
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = bubbleSprites[randomIndex];
+
+                string spriteName = spriteRenderer.sprite.name;
+                Debug.Log("Sprite name: " + spriteName);
+                switch (spriteName)
+                {
+                    case "gold_bubble":
+                        bb.BubbleColor = "GOLD";
+                        break;
+                    case "blue_bubble":
+                        bb.BubbleColor = "BLUE";
+                        break;
+                    case "pink_bubble":
+                        bb.BubbleColor = "PINK";
+                        break;
+                    case "green_bubble":
+                        bb.BubbleColor = "GREEN";
+                        break;
+                    case "purple_bubble":
+                    default:
+                        bb.BubbleColor = "PURPLE";
+                        break;
+                }
+
+                Debug.Log("Color: " + bb.BubbleColor);
             }
         }
     }
