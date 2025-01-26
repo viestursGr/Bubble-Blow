@@ -34,16 +34,19 @@ public class ShotBubble : Bubble
             Vector3 snappedPosition = bubbleManager.SnapToGrid(transform.position);
             transform.position = snappedPosition;
 
-            var springJoint =  this.gameObject.AddComponent<SpringJoint2D>();
-            springJoint.anchor = snappedPosition;
-
             var collidedBubble = collision.gameObject.GetComponent<Bubble>();
-            Debug.Log("Collided bubble: " + collidedBubble.BubblePositionX + " " + collidedBubble.BubblePositionY);
-
-            // bubbleManager.AddBubbleToGrid(gameObject, snappedPosition);
+            bubbleManager.AddBubbleToGrid(gameObject, snappedPosition);
 
             // Disable this script after the bubble is part of the grid
             AddedToGrid = true;
+
+            // Notify the cannon that it can shoot again
+            FindObjectOfType<ShootBubble>().OnBubbleResolved();
         }
+    }
+
+    void OnBecameInvisible()
+    {
+        Destroy(gameObject);
     }
 }

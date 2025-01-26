@@ -7,10 +7,19 @@ public class ShootBubble : MonoBehaviour
     public GameObject bubblePrefab; // Assign your bubble prefab here
     public float shootForce = 10f;
     public Sprite[] bubbleSprites; // Array of sprites for bubble colors
+    public BubbleManager bubbleManager;
+    public Transform cannonTip; // Assign the top of the cannon in the Inspector
+    private bool canShoot = true; // Ensure only one bubble can be active at a time
+
+    void Start()
+    {
+        bubbleManager = FindObjectOfType<BubbleManager>();
+    }
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0)) // Left mouse click
+        bool canShoot = Input.GetMouseButtonDown(0);
+        if (canShoot) // Left mouse click
         {
             Shoot();
         }
@@ -18,10 +27,37 @@ public class ShootBubble : MonoBehaviour
 
     void Shoot()
     {
-        GameObject bubble = Instantiate(bubblePrefab, new Vector3(transform.position.x, transform.position.y, 0), transform.rotation);        
-        AssignRandomColor(bubble);
+        if (!canShoot) return; // Prevent shooting if a bubble is already active
+
+      // Instantiate the bubble at the cannon's tip
+        GameObject bubble = Instantiate(bubblePrefab, cannonTip.position, transform.rotation);
+
+
+
+        // gets color of next ball, that's loaded, colors are selected before shooting so player can prepare
+        string color = bubbleManager.GetCurrentColor();
+
+        ChangeColor(color, bubble);
         Rigidbody2D rb = bubble.GetComponent<Rigidbody2D>();
         rb.AddForce(transform.up * shootForce, ForceMode2D.Impulse);
+
+        AssignRandomColor(bubble);
+
+        // Mark that shooting is disabled until the bubble is resolved
+        canShoot = false;
+    }
+
+    void ChangeColor(string color, GameObject bubble) 
+    {
+        var bb = bubble.GetComponent<Bubble>();
+        SpriteRenderer spriteRenderer = bubble.GetComponent<SpriteRenderer>();
+        foreach(var sprite in bubbleSprites)
+        {
+            if (sprite.name.Contains(color.ToLower())) {
+                bb.BubbleColor = color;
+                spriteRenderer.sprite = sprite;
+            }
+        }
     }
 
     void AssignRandomColor(GameObject bubble)
@@ -63,5 +99,11 @@ public class ShootBubble : MonoBehaviour
                 Debug.Log("Color: " + bb.BubbleColor);
             }
         }
+    }
+
+    // Reset the shooting state when the bubble is resolved
+    public void OnBubbleResolved()
+    {
+        canShoot = true;
     }
 }

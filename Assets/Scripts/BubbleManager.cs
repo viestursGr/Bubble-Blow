@@ -23,7 +23,12 @@ public class BubbleManager : MonoBehaviour
         // Generate initial rows of bubbles
         GenerateInitialBubbles();
 
-        // StartCoroutine(MoveBubblesDown());
+        StartCoroutine(MoveBubblesDown());
+    }
+
+    // 
+    public string GetCurrentColor(){
+        return "PINK";
     }
 
     void GenerateInitialBubbles()
@@ -58,7 +63,8 @@ public class BubbleManager : MonoBehaviour
 
     public Vector3 SnapToGrid(Vector3 position)
     {
-        float snappedX = Mathf.Round((position.x + gridWidth / 2f * bubbleSpacing) / bubbleSpacing) * bubbleSpacing - gridWidth / 2f * bubbleSpacing;
+        float snappedX = Mathf.Round((position.x + gridWidth / 2f * bubbleSpacing) / bubbleSpacing) 
+            * bubbleSpacing - gridWidth / 2f * bubbleSpacing;
         float snappedY = Mathf.Round(position.y / bubbleSpacing) * bubbleSpacing;
         return new Vector3(snappedX, snappedY, 0);
     }
@@ -98,6 +104,7 @@ public class BubbleManager : MonoBehaviour
             {
                 Debug.Log("Game Over! Bubbles reached the bottom.");
                 StopAllCoroutines();
+                FindObjectOfType<GameManager>().GameOver();
             }
         }
     }
@@ -122,7 +129,7 @@ public class BubbleManager : MonoBehaviour
         // // Shift bubbles up to make space for a new row
         // for (int j = gridHeight - 1; j > 0; j--)
         // {
-        //     for (int i = 0; i < gridWidth; i++)
+        //     for (int i = 0; i < gridWidth; i++)  
         //     {
         //         bubbleGrid[i, j] = bubbleGrid[i, j - 1];
         //     }
@@ -149,6 +156,7 @@ public class BubbleManager : MonoBehaviour
 
     public void CheckForMatches(int startX, int startY)
     {
+        return;
         Debug.Log("Matching");
 
         List<GameObject> matchingBubbles = new List<GameObject>();
